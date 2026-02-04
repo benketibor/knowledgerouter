@@ -12,9 +12,6 @@ services:
     healthCheckPath: /api/healthz
     
     envVars:
-      - key: PORT
-        value: "8000"
-      
       - key: DEBUG
         value: "False"
       
