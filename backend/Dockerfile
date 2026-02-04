@@ -22,5 +22,11 @@ RUN mkdir -p data/users data/sessions data/files
 # Expose port
 EXPOSE 8000
 
-# Run server
-CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
+# Run server (optimized for Render free tier 512MB RAM)
+CMD ["gunicorn", "core.wsgi:application", \
+     "--bind", "0.0.0.0:8000", \
+     "--workers", "1", \
+     "--threads", "2", \
+     "--timeout", "120", \
+     "--max-requests", "100", \
+     "--max-requests-jitter", "10"]
