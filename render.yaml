@@ -7,7 +7,7 @@ services:
     name: knowledgerouter-backend
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    dockerContext: .
     
     healthCheckPath: /api/healthz
     
@@ -82,7 +82,7 @@ services:
     name: knowledgerouter-frontend
     runtime: docker
     dockerfilePath: ./frontend/Dockerfile
-    dockerContext: ./frontend
+    dockerContext: .
     
     plan: free
     
