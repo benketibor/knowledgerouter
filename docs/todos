@@ -1,0 +1,151 @@
+## 🚧 Előttünk álló feladatok
+
+### High Priority (🎯 Immediate - 1-2 hét)
+- [ ] **LangGraph Node Trace Visualization**: Debug panel bővítés node execution trace megjelenítéssel
+  - Implementáció: Frontend trace viewer (node flow diagram, execution timeline, state transitions), backend trace API endpoint már létezik (rag_context, llm_prompt, llm_response mezők), WebSocket vagy SSE real-time trace streaming opcionális.
+  - Impact: Fejlesztői experience javítás, production debugging, workflow optimization insight.
+- [ ] **Citation-level feedback UI**: 👍👎 gombok citation-ökön (response-level már kész, citation-level még nincs)
+  - Implementáció: Minden forrás mellett dedikált feedback gombok, külön API endpoint citation-szintű feedback mentésre, qdrant metadata frissítés (score boost/penalty).
+- [ ] **Rerank implementation**: Citation re-ranking feedback-weighted semantic relevancia alapján
+  - Implementáció: Qdrant keresési score kombinálása feedback score-ral (weighted average), pozitív feedback → score boost, negatív → penalty.
+- [ ] **Integration tesztek**: Multi-domain RAG + feedback + external APIs end-to-end
+  - Implementáció: Pytest end-to-end test suite (query → retrieval → feedback → rerank loop), multi-domain test fixtures (IT + HR dokumentumok), coverage target 80%.
+  - **Google Drive API**: test_google_drive_client.py (file list, upload, download, search, OAuth flow)
+  - **Jira/Confluence API**: Kibővítés test_atlassian_client.py-ban (real API calls opcionális @pytest.mark.integration flag-gel)
+  - **End-to-End**: IT query → Qdrant retrieval → Jira ticket creation workflow teszt
+
+### Medium Priority (📅 Short-term - 2-4 hét)
+- [ ] **LLM Configuration Environment Variables**: Temperature + max tokens/request tuning
+  - Implementáció: TEMPERATURE env var (default 0.7, range 0.0-1.0), MAX_TOKENS_PER_REQUEST env var (default 4000), settings.py integration, per-domain override support (IT domain → temperature=0.3 determinisztikus, Marketing → 0.9 kreatív).
+  - Impact: LLM behavior finomhangolás domain-enként, költség kontroll, determinizmus vs kreativitás trade-off.
+- [ ] **RAG Confidence Score UI**: Cosine similarity 0-100% csúszka + confidence badge
+  - Implementáció: Frontend slider vagy progress bar citation score alapján (már létezik: citation.score), confidence threshold szűrés (pl. csak >70% score citations megjelenítése), color-coded confidence levels (green >80%, yellow 60-80%, red <60%).
+  - Impact: Felhasználói bizalom növelés, weak answer jelzés, transparent AI behavior.
+- [ ] **GitHub Actions CI/CD Pipeline**: Automated testing + deployment workflow
+  - Implementáció: .github/workflows/ci.yml (pytest, coverage check, linting), .github/workflows/deploy.yml (Docker build, registry push, staging deployment), Dependabot auto-merge workflow critical fixes-hez.
+  - Impact: Automated quality gates, deployment safety, faster iteration cycle.
+- [ ] **Dependency vulnerability fixes**: GitHub Dependabot security updates (153 vulnerabilities: 7 critical, 47 high, 79 moderate, 20 low)
+  - Implementáció: npm audit fix (frontend), pip-audit + safety check (backend), dependency version bumps, breaking change testing, CI/CD security scanning integration.
+  - Priority packages: Critical & High severity fixes (Node.js packages, Python dependencies), automated Dependabot PR review workflow.
+- [ ] **Query embedding context scoring**: Feedback aggregation embedding similarity-vel
+  - Implementáció: Query embedding tárolása PostgreSQL-ben feedback mellett, hasonló kérdések (cosine similarity > 0.8) feedback aggregálása, weighted score számítás.
+- [ ] **Frontend citation re-ranking**: Live feedback-based result reordering
+  - Implementáció: Real-time citation lista rendezés frontend-en (JavaScript sort) feedback alapján, AJAX endpoint feedback submit után frissített sorrend lekérésére.
+- [ ] **Szenzitív adatok kiszűrése**: PII detection a promptból (email, phone, SSN)
+  - Implementáció: Regex-based PII detection middleware (email, phone, SSN, credit card patterns), [REDACTED] placeholder behelyettesítés vagy request reject.
+- [ ] **Rate limiting**: Per-user rate limits (100 req/hour)
+  - Implementáció: Redis-based rate limiter (user_id key, sliding window), 429 Too Many Requests response, Retry-After header küldése.
+- [ ] **BM25 sparse vectors**: Lexikális keresés támogatás (márkanevek, kódok)
+  - Implementáció: Qdrant sparse vector support, BM25 tokenization (TF-IDF weighted), hybrid search (dense + sparse score kombinálás) márkanevek/kódok jobb találatához.
+- [ ] **Prometheus AlertManager**: Alert rules (timeout, cost anomaly, error rate)
+  - Implementáció: AlertManager konfigurálás (Prometheus alert rules: latency > 5s, error_rate > 5%, daily_cost > $10), email/Slack notification integrációk.
+- [ ] **Semantic Cache**: Vector-based caching (cosine similarity > 0.95 → cache hit hasonló kérdésekre)
+  - Implementáció: Query embedding tárolása Redis-ben, cosine similarity check minden új query-nél. +15-20% cache hit rate hasonló megfogalmazású kérdéseknél (pl. "Mi az IP cím?" vs "Mondd meg az IP címet").
+- [ ] **Response Caching**: Teljes Summary node válasz cache (TTL: 24h, FAQ-típusú kérdésekhez)
+  - Implementáció: Summary node output cache-elése Redis-ben (query hash key). 100% költség megtakarítás ismételt azonos kérdéseknél, 95% latency csökkenés cache hit esetén.
+- [ ] **Token Quota System**: Per-user napi token limit (100K/day), 429 Too Many Requests ha túllépés
+  - Implementáció: Redis counter user_id-val (INCR, EXPIRE 24h), middleware check request előtt. Védelem túlhasználat és költség-robbanás ellen, rate limit integration.
+
+#### 🎯 Multi-Tool Agent - Fázis 1-2 (Házi Feladat)
+
+##### Fázis 1: Reasoning Layer Bővítés (1-2 hét)
+- [ ] **Plan Node**: ExecutionPlan Pydantic model, _plan_node implementáció, "Think step-by-step" LLM prompt, graph edge: intent → plan → retrieval
+- [ ] **Chain-of-Thought Prompting**: Update intent_detection/generation/plan prompts CoT-tal, verify step-by-step reasoning tesztekkel
+- [ ] **Tool Selection Node**: ToolSelection Pydantic model, _tool_selection_node, LLM döntés (RAG/Jira/Email/Calculation), conditional routing
+  - Deliverable: docs/házi feladatok/IMPLEMENTATION_PHASE_1.md, test_plan_node.py, test_tool_selection.py
+
+##### Fázis 2: Tool Execution Layer (2-3 hét)
+- [ ] **Tool Registry**: ToolRegistry class (register, get_descriptions, execute), tool schema extraction (type hints → JSON), infrastructure/tool_registry.py
+- [ ] **Tool Executor Loop**: Iteratív tool execution, per-tool error handling (timeout, retry, fallback), tool results collection & logging
+- [ ] **Observation Node**: ObservationOutput model, LLM értékelés "Do I have enough info?", conditional routing (Generate vs Replan)
+- [ ] **Planner Fallback**: Retry node planner fallback, tool fail → LLM replan, max replans limit, degradation logic
+  - Deliverable: docs/házi feladatok/IMPLEMENTATION_PHASE_2.md, test_tool_executor.py, test_observation.py, test_executor_loop.py
+
+### Low Priority (🔮 Long-term - 1-3 hónap)
+
+#### Infrastruktúra & Compliance
+- [ ] **Authentication**: API key vagy JWT token auth
+  - ImplStreaming Response (SSE/WebSocket)**: Token-by-token streaming válaszadás + abortálhatóság
+  - Implementáció: SSE endpoint (/api/stream) vagy WebSocket (/ws/query), OpenAI streaming API (stream=True), frontend EventSource vagy WebSocket client, abort signal support (user cancel button), chunked response rendering.
+  - Impact: -60% észlelt latency, felhasználó azonnali feedback, long-running query abort lehetőség (timeout protection).
+  - Architektúra átírás: REST → SSE/WebSocket, state management komplex (streaming + abort), kapcsolat újracsatlakozás (reconnect logic).
+- [ ] **WebSocket support**: Real-time streaming responses
+  - Implementáció: Django Channels WebSocket consumer, bidirectional kommunikáció (query submit + real-time streaming response), connection management (reconnect logic).
+- [ ] **Multi-language support**: Automatikus nyelvdetekció és fordítás
+  - Implementáció: langdetect library query nyelvének detektálására, Google Translate API nem-angol query-k fordítására angol-ra (RAG input), válasz visszafordítás eredeti nyelvr
+  - Implementáció: OpenTelemetry SDK integráció (auto-instrumentation), span creation node-onként (intent, retrieval, generation), Jaeger/Zipkin backend trace visualization.
+
+#### UX Enhancements
+- [ ] **WebSocket support**: Real-time streaming responses
+  - Implementáció: Django Channels WebSocket consumer, bidirectional kommunikáció (query submit + real-time streaming response), connection management (reconnect logic).
+- [ ] **Multi-language support**: Automatikus nyelvdetekció és fordítás
+  - Implementáció: langdetect library query nyelvének detektálására, Google Translate API nem-angol query-k fordítására angol-ra (RAG input), válasz visszafordítás eredeti nyelvre.
+- [ ] **Streaming Response**: Token-by-token streaming (SSE/WebSocket), UX: -60% észlelt latency
+  - Implementáció: SSE endpoint (/stream), OpenAI streaming API (stream=True), frontend EventSource vagy WebSocket. Felhasználó azonnali feedback-et kap, még mielőtt a teljes válasz elkészülne.
+
+#### Advanced Optimizations
+- [ ] **Batch Query API**: Párhuzamos több query feldolgozás (asyncio.gather) + OpenAI Batch API (50% olcsóbb, 24h delay)
+  - Implementáció: /batch endpoint (több query egy requestben), asyncio.gather parallel feldolgozás, vagy OpenAI Batch API (50% olcsóbb, de 24h válaszidő). Bulk import/report generáláshoz ideális.
+- [ ] **Model Fallback Strategy**: Auto-fallback GPT-4 → GPT-4-turbo → GPT-3.5 (rate limit/timeout esetén)
+  - Implementáció: Try-except wrapper LLM hívások körül, automatic retry olcsóbb modellel (rate limit/timeout exception catch). +30% megbízhatóság, -10% átlagos költség peak időszakokban.
+- [ ] **Prompt Compression**: DELTA prompting (csak változások küldése, nem teljes context, 15-20% token csökkenés)
+  - ICleanup & Documentation
+- [ ] **Unused Domain Cleanup**: Felesleges domain-ek törlése (Finance, Legal ha nincs használva)
+  - Implementáció: Domain usage analytics (Prometheus metrics), inactive domain-ek identifikálása (0 query 30 napban), domain törlés (code, Qdrant collection cleanup, tests update).
+  - Impact: Kód egyszerűsítés, maintenance effort csökkentés, kevesebb confusion.
+- [ ] **RAG Architecture Documentation**: RAG.md generálás architektúra diagramokkal
+  - Implementáció: docs/RAG.md létrehozás (Qdrant schema, embedding pipeline, retrieval flow, reranking algoritmus), Mermaid diagrams (vector search flow, feedback loop), code examples (indexing, searching, citation generation).
+  - Impact: Onboarding gyorsítás, architecture decision records, technical debt transparency.
+
+#### mplementáció: Conversation history diff-elése (csak új/változott részek küldése), context compression algorithms (gzip, custom summarization). 15-20% token megtakarítás hosszú beszélgetéseknél.
+
+#### 🎯 Multi-Tool Agent - Fázis 3-4 (Házi Feladat)
+
+##### Fázis 3: Error Handling & Resilience (1-2 hét)
+- [ ] **Retry Node**: RetryNode implementáció (max_retries, exponential backoff), error classification (transient vs permanent)
+- [ ] **Fallback Model Logic**: gpt-4o-mini → gpt-3.5-turbo fallback, cost optimization, state tracking
+- [ ] **Guardian Node**: AI Act compliance, PII detection, content policy check, audit logging
+- [ ] **Fail-Safe Response**: FailSafeResponse Pydantic model, ultimate fallback (HU+EN), graceful degradation
+  - Deliverable: docs/házi feladatok/IMPLEMENTATION_PHASE_3.md, test_retry_node.py, test_guardian.py
+
+##### Fázis 4: Memory & Context Handling (1-2 hét)
+- [ ] **Long-Term Memory**: UserProfile DB schema (Postgres), UserMemoryStore CRUD, profile loading in intent_detection
+- [ ] **Multi-Level Summarization**: Short (8 msg), Medium (50 msg), Long (200+ msg) tiers, automatic tier selection
+- [ ] **Retrieval-Before-Tools**: RAG context augmentation in tool prompts, tool observation → memory feedback
+  - Deliverable: docs/házi feladatok/IMPLEMENTATION_PHASE_4.md, test_user_memory.py, DB migration
+
+---
+
+## 📚 Referenciák & Dokumentáció
+Multi-Agent Minták (Router, Subagents, Handoffs, Skills, Custom Workflow)](https://github.com/adrgul/ai_agent_tutorial/blob/main/13_multiagent/documents/multi-agent-mintak.md)
+- [
+**Saját dokumentáció:**
+- ✅ docs/archive/AGENT_ARCHITECTURE_ANALYSIS.md
+- 📝 docs/archive/IMPLEMENTATION_PHASE_*.md (tervezett)
+- ✅ docs/MONITORING.md
+
+**Külső források:**
+- [AI Agent 4 Réteg Architektúra](https://github.com/adrgul/ai_agent_tutorial/blob/main/docs/AI_AGENT_4_RETEG_ARCHITEKTURA.md)
+- [Költségoptimalizálás](https://github.com/adrgul/ai_agent_tutorial/blob/good-version/10_cost_optimization/docs/JAVITASOK_RESZLETESEN.md)
+- [Monitoring & Prometheus](https://github.com/adrgul/ai_agent_tutorial/blob/main/docs/09_MONITORING_PROMPT.md)
+- [Infra/Cloud] https://github.com/adrgul/ai-agent-infra, abból is https://github.com/adrgul/ai-agent-infra/blob/main/docs/DEVOPS_TUTORIAL_HU.md 
+- [LangGraph-állapotkezelés] https://github.com/adrgul/ai-agent-infra/blob/main/docs/ALLAPOTKEZELES_RESZLETEK.md
+---
+
+## ⚙️ Implementációs Jegyzetek
+
+**Módosítandó fájlok (prioritás szerint):**
+- `services/agent.py` - új nodes (Plan, Tool Selection, Observation)
+- `domain/llm_outputs.py` 
+
+Kategorizálandók/újak:
+- max token/per request környezeti változó
+- temperature környezeti változó
+- multi agent tananyag: https://github.com/adrgul/ai_agent_tutorial/tree/main/13_multiagent
+- websocket vagy sse protocolra átírás a REST helyett, hogy folyamatos szavankénti válaszadás legyen és abortálható legyen a válaszaadás, ha valamilyen probléma miatt sokáig tart
+- RAG cosine similarity 0-100% alapján egy csúszkán mérni a választ és jelezni a Confidence mértékét
+- langgraph node hívásonként legyen trace (objektumok, route-ok, hívások) + megjelenítés debug panelen
+- felesleges domainek törlése a projektből
+- RAG.md generálás
+- beszédstílus megértése, alkalmazása
+- szenzitív adatok kinyerése/maszkolása
